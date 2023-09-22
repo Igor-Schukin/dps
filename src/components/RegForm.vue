@@ -75,9 +75,12 @@
         if (!fields.school.data.value) fields.school.error.value = "Jums jāievada savas skolas nisaukums";
         if (!fields.email.data.value) fields.email.error.value = "Jums jāievada sava kontakta e-pasta adrese";
         else if (!isValidEmail(fields.email.data.value)) fields.email.error.value = "Lūdzu ievadiet pareizo e-pasta adresi";
+        for(const field in fields) if (fields[field].error.value) return false;
+        return true;
     }
 
     async function doRegister() {
+        if (!validate()) return;
         var data = {}; for(const field in fields) data[field] = fields[field].data.value;
         errMessage.value = false;
         okMessage.value = false;
@@ -93,8 +96,8 @@
             errMessage.value = await response.text();
             return;
         }
-        let d = await response.json();
-        console.log(d);   
+        // let d = await response.json();
+        // console.log(d);   
         okMessage.value = "Ok";
     }
 
@@ -103,6 +106,8 @@
         okMessage.value = false;
         fields.name.data.value = "";
         fields.surname.data.value = "";
+        fields.email.data.value = "";
+        fields.phone.data.value = "";
     }
 
 

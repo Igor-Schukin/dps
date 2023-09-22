@@ -1,72 +1,57 @@
 <?php
 
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(404);
-        echo "Method not supported";
-    }
-
-
-    $jsonData = file_get_contents('php://input');
-    $data = json_decode($jsonData, true);
-    if ($data === null) {
-        http_response_code(400); 
-        echo "Invalid JSON data";
-    }
-
-
-    // http_response_code(404);
-    // $data = [
-    //     "data" => 2,
-    //     "message" => "Hello"
-    // ];
-
-    if ($data['name'] == "") {
+    function fault($message) {
         http_response_code(400);
-        echo "Invalid name";
-        return;
+        exit($message);        
     }
 
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($data);
+    $server = 'localhost';
+    $database = 'dps';
+    $table = 'students';
+    $user = 'dps';
+    $password = 'gaudeamus';
 
-/*
+    // Request method must by POST
 
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') fault("Method not supported");
 
-    // Retrieve the raw POST data
+    // Read JSON from body
+
     $jsonData = file_get_contents('php://input');
-    // Decode the JSON data into a PHP associative array
     $data = json_decode($jsonData, true);
-    // Check if decoding was successful
-    if ($data !== null) {
-    // Access the data and perform operations
-    $name = $data['name'];
-    $age = $data['age'];
-    // Perform further processing or respond to the request
-    } else {
-    // JSON decoding failed
-    http_response_code(400); // Bad Request
-    echo "Invalid JSON data";
-    }
+    if ($data === null) fault("Invalid JSON document");
 
-    $link = mysqli_connect("localhost", "student", "stud.net", "Net.Testing");
+    // connect to DB
+
+    $link = mysqli_connect($server, $user, $password, $database);
     mysqli_set_charset($link, "utf8");
 
-    $result = mysqli_query($link, "
-        INSERT INTO Comments (date, text, client) 
-        VALUES (CURRENT_TIMESTAMP, '{$_POST["comment"]}', '{$_SERVER['REMOTE_ADDR']}')
-    ");
+    // Check if user exists
 
-    if ($result)
-        print "<font color=Navy><b>Comment is successfully added into database</b></font><br>";
-    else
-        print "<font color=Red><b>Comment is not added into database due to error</b></font><br>";
+    $result = mysqli_query($link, "
+        SELECT COUNT(*) AS num_rows 
+        FROM {$table} 
+        WHERE name='{$data["name"]}' AND  surname='{$data["surname"]}' AND  group_id='{$data["group"]}'
+        LIMIT 1;
+    ");
+    
+    $row = mysqli_fetch_array($result);
+    if($row["num_rows"] > 0) {
+        mysqli_close($link);
+        fault( "User already exists");
+    }
+
+    // Insert new record to DB
+
+    $result = mysqli_query($link, "
+        INSERT INTO {$table} (group_id, name, surname, school, year, email, phone) 
+        VALUES ('{$data["group"]}', '{$data["name"]}', '{$data["surname"]}', '{$data["school"]}', '{$data["year"]}', '{$data["email"]}', '{$data["phone"]}')
+    ");
 
     mysqli_close($link);
 
-    // http_response_code(404);
-    // $data = ;
-    // header('Content-Type: application/json; charset=utf-8');
-    // echo json_encode($data)
-*/
+    if (!$result) fault("Fault to insert new record to DB");
+
+    echo "OK";
 
 ?>
