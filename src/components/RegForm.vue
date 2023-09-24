@@ -1,28 +1,34 @@
 <style scoped>
 </style>
 
-<template>
-    <div class="container-fluid mt-5">
+<template> 
 
-        <div v-show="okMessage" class="alert alert-success text-center">
-            {{ okMessage }}
-            <p class="pt-3 mb-0 text-center">
-                <button class="btn btn-primary" @click.prevent="doRefresh">Reģistrēt nākamā studenta</button>
-            </p>
+    <div class="container mx-0">
+        <div class="container-fluid rounded mx-5 mb-3 p-3 bg-primary text-white">
+            <h2>Daugavpils Programmētāju Skola</h2>
+            <p class="m-0">studentu reģistrācija</p>
         </div>
 
-        <template v-if="!okMessage">
+        <div class="container-fluid mx-5 my-0 px-0">
 
-            <div v-show="errMessage" class="alert alert-danger text-center alert-dismissible">
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                {{ errMessage }}
+            <div v-show="okMessage" class="alert alert-success text-center">
+                Students <strong>{{ fields.name.data.value }} {{ fields.surname.data.value }}</strong> tika veiksmīgi reģistrēts Daugavpils Programmētāju Skolas <strong>{{ fields.group.data.value }}</strong> grupā
+                <p class="pt-3 mb-0 text-center">
+                    <button class="btn btn-primary" @click.prevent="doRefresh">Reģistrēt nākamo studentu</button>
+                </p>
             </div>
 
-            <form>
+            <template v-if="!okMessage">
 
-                <div v-for="(field, id) in fields" :key="`field-${id}`" class="row mb-3">
-                    <label :for="`field-${id}`" class="col-sm-2 form-label">{{ field.title }}</label>
-                    <div class="col" >
+                <div v-show="errMessage" class="alert alert-danger text-center alert-dismissible">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    Neizdevās reģistrēt studentu <strong>{{ fields.name.data.value }} {{ fields.surname.data.value }}</strong> Daugavpils Programmētāju Skolas <strong>{{ fields.group.data.value }}</strong> grupā:<br>
+                    {{ errMessage }}
+                </div>
+
+                <form>
+
+                    <div v-for="(field, id) in fields" :key="`field-${id}`" class="form-floating row mb-3">
                         <input 
                             v-if="field.type != 'select'" 
                             class="form-control" 
@@ -30,20 +36,29 @@
                             :id="`field-${id}`" 
                             v-model.trim="field.data.value"
                             :class="{'is-invalid': field.error.value}"
+                            :placeholder="field.title"
                             @input="field.error.value=false"
+                            :disabled="wait"
                         >
-                        <select v-else class="form-select" v-model="field.data.value">
+                        <select v-else class="form-select" v-model="field.data.value" :disabled="wait">
                             <option v-for="grp in field.values" :key="`group-${grp}`" :value="grp">{{ grp }}</option>
                         </select>
                         <div v-if="field.error.value" class="invalid-feedback">{{ field.error.value }}</div>
+
+                        <label :for="`field-${id}`" class="form-label">{{ field.title }}</label>
                     </div>
-                </div>
 
-                <button class="btn btn-primary" @click.prevent="doRegister">Saglabat</button>
+                    <button v-if="!wait" class="btn btn-primary" @click.prevent="doRegister">Reģistrēties</button>
 
-            </form>	
-        </template>	
-    
+                    <button v-else class="btn btn-primary" disabled>
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                        Reģistrējas...
+                    </button>
+
+                </form>	
+            </template>	
+        
+        </div>
     </div>
 </template>
 
@@ -62,6 +77,15 @@
 
     const okMessage = ref(false);
     const errMessage = ref(false);
+    const wait = ref(false);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const group = urlParams.get('group');
+    let y = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].indexOf(group);
+    if (y >= 0) {
+        fields.group.data.value = group;
+        fields.year.data.value = 6 + y;
+    }
 
     function isValidEmail(email) 
     {
@@ -84,6 +108,7 @@
         var data = {}; for(const field in fields) data[field] = fields[field].data.value;
         errMessage.value = false;
         okMessage.value = false;
+        wait.value = true;
         let response = await fetch('register.php', {
             method: 'POST',
             headers: {
@@ -92,13 +117,9 @@
             },
             body: JSON.stringify(data)
         });
-        if (response.status != 200) {
-            errMessage.value = await response.text();
-            return;
-        }
-        // let d = await response.json();
-        // console.log(d);   
-        okMessage.value = "Ok";
+        if (response.status != 200) errMessage.value = await response.text();
+        else  okMessage.value = "Ok";
+        wait.value = false;
     }
 
     function doRefresh() {

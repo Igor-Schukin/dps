@@ -13,13 +13,13 @@
 
     // Request method must by POST
 
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') fault("Method not supported");
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') fault("servera kļūda (method not supported)");
 
     // Read JSON from body
 
     $jsonData = file_get_contents('php://input');
     $data = json_decode($jsonData, true);
-    if ($data === null) fault("Invalid JSON document");
+    if ($data === null) fault("servera kļūda (invalid JSON document)");
 
     // connect to DB
 
@@ -38,7 +38,7 @@
     $row = mysqli_fetch_array($result);
     if($row["num_rows"] > 0) {
         mysqli_close($link);
-        fault( "User already exists");
+        fault( "students jau ir reģistrēts");
     }
 
     // Insert new record to DB
@@ -50,7 +50,7 @@
 
     mysqli_close($link);
 
-    if (!$result) fault("Fault to insert new record to DB");
+    if (!$result) fault("servera kļūda (fault to insert new record)");
 
     echo "OK";
 
