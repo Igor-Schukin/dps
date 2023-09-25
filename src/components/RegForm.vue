@@ -69,8 +69,8 @@
         group:   { type: "select", data: ref("C2"), title: "DPS grupa", error: ref(""), values: ["A1", "A2", "B1", "B2", "C1", "C2"] },
         name:    { type: "text",   data: ref(""),   title: "Vārds", error: ref("")},
         surname: { type: "text",   data: ref(""),   title: "Uzvārds", error: ref("")},
-        school:  { type: "text",   data: ref(""),   title: "Skona", error: ref("")},
-        year:    { type: "select", data: ref("12"), title: "Klase", values: ["6", "7", "8", "9", "10", "11", "12"], error: ref("")},
+        school:  { type: "text",   data: ref(""),   title: "Skola", error: ref("")},
+        year:    { type: "select", data: ref("12"), title: "Klase", values: ["4", "5", "6", "7", "8", "9", "10", "11", "12"], error: ref("")},
         email:   { type: "email",  data: ref(""),   title: "E-mail adrese", error: ref("")},
         phone:   { type: "text",   data: ref(""),   title: "Telefona numurs", error: ref("")},
     };
