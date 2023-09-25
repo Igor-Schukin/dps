@@ -3,62 +3,60 @@
 
 <template> 
 
-    <div class="container mx-0">
-        <div class="container-fluid rounded mx-5 mb-3 p-3 bg-primary text-white">
-            <h2>Daugavpils Programmētāju Skola</h2>
-            <p class="m-0">studentu reģistrācija</p>
+    <div class="container rounded p-3 mb-3 bg-primary text-white">
+        <h2>Daugavpils Programmētāju Skola</h2>
+        <p class="m-0">studentu reģistrācija</p>
+    </div>
+
+    <div class="container">
+
+        <div v-show="okMessage" class="alert alert-success text-center">
+            Students <strong>{{ fields.name.data.value }} {{ fields.surname.data.value }}</strong> tika veiksmīgi reģistrēts Daugavpils Programmētāju Skolas <strong>{{ fields.group.data.value }}</strong> grupā
+            <p class="pt-3 mb-0 text-center">
+                <button class="btn btn-primary" @click.prevent="doRefresh">Reģistrēt nākamo studentu</button>
+            </p>
         </div>
 
-        <div class="container-fluid mx-5 my-0 px-0">
+        <template v-if="!okMessage">
 
-            <div v-show="okMessage" class="alert alert-success text-center">
-                Students <strong>{{ fields.name.data.value }} {{ fields.surname.data.value }}</strong> tika veiksmīgi reģistrēts Daugavpils Programmētāju Skolas <strong>{{ fields.group.data.value }}</strong> grupā
-                <p class="pt-3 mb-0 text-center">
-                    <button class="btn btn-primary" @click.prevent="doRefresh">Reģistrēt nākamo studentu</button>
-                </p>
+            <div v-show="errMessage" class="alert alert-danger text-center alert-dismissible">
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                Neizdevās reģistrēt studentu <strong>{{ fields.name.data.value }} {{ fields.surname.data.value }}</strong> Daugavpils Programmētāju Skolas <strong>{{ fields.group.data.value }}</strong> grupā:<br>
+                {{ errMessage }}
             </div>
 
-            <template v-if="!okMessage">
+            <form>
 
-                <div v-show="errMessage" class="alert alert-danger text-center alert-dismissible">
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    Neizdevās reģistrēt studentu <strong>{{ fields.name.data.value }} {{ fields.surname.data.value }}</strong> Daugavpils Programmētāju Skolas <strong>{{ fields.group.data.value }}</strong> grupā:<br>
-                    {{ errMessage }}
+                <div v-for="(field, id) in fields" :key="`field-${id}`" class="form-floating row mb-3">
+                    <input 
+                        v-if="field.type != 'select'" 
+                        class="form-control" 
+                        :type="field.type" 
+                        :id="`field-${id}`" 
+                        v-model.trim="field.data.value"
+                        :class="{'is-invalid': field.error.value}"
+                        :placeholder="field.title"
+                        @input="field.error.value=false"
+                        :disabled="wait"
+                    >
+                    <select v-else class="form-select" v-model="field.data.value" :disabled="wait">
+                        <option v-for="grp in field.values" :key="`group-${grp}`" :value="grp">{{ grp }}</option>
+                    </select>
+                    <div v-if="field.error.value" class="invalid-feedback">{{ field.error.value }}</div>
+
+                    <label :for="`field-${id}`" class="form-label">{{ field.title }}</label>
                 </div>
 
-                <form>
+                <button v-if="!wait" class="btn btn-primary" @click.prevent="doRegister">Reģistrēties</button>
 
-                    <div v-for="(field, id) in fields" :key="`field-${id}`" class="form-floating row mb-3">
-                        <input 
-                            v-if="field.type != 'select'" 
-                            class="form-control" 
-                            :type="field.type" 
-                            :id="`field-${id}`" 
-                            v-model.trim="field.data.value"
-                            :class="{'is-invalid': field.error.value}"
-                            :placeholder="field.title"
-                            @input="field.error.value=false"
-                            :disabled="wait"
-                        >
-                        <select v-else class="form-select" v-model="field.data.value" :disabled="wait">
-                            <option v-for="grp in field.values" :key="`group-${grp}`" :value="grp">{{ grp }}</option>
-                        </select>
-                        <div v-if="field.error.value" class="invalid-feedback">{{ field.error.value }}</div>
+                <button v-else class="btn btn-primary" disabled>
+                    <span class="spinner-border spinner-border-sm me-1"></span>
+                    Reģistrējas...
+                </button>
 
-                        <label :for="`field-${id}`" class="form-label">{{ field.title }}</label>
-                    </div>
-
-                    <button v-if="!wait" class="btn btn-primary" @click.prevent="doRegister">Reģistrēties</button>
-
-                    <button v-else class="btn btn-primary" disabled>
-                        <span class="spinner-border spinner-border-sm me-1"></span>
-                        Reģistrējas...
-                    </button>
-
-                </form>	
-            </template>	
-        
-        </div>
+            </form>	
+        </template>	
+    
     </div>
 </template>
 
@@ -117,7 +115,7 @@
             },
             body: JSON.stringify(data)
         });
-        if (response.status != 200) errMessage.value = await response.text();
+        if (!response.ok) errMessage.value = (await response.text()) || "unknow error";
         else  okMessage.value = "Ok";
         wait.value = false;
     }
