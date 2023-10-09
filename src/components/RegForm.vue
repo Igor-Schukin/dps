@@ -1,17 +1,25 @@
 <style scoped>
+
+.DPS-bg {
+    background-color: darkblue;
+}
+
+.DIS-bg {
+    background-color: darkgreen;
+}
 </style>
 
 <template> 
 
-    <div class="container rounded p-3 mb-3 bg-primary text-white">
-        <h2>Daugavpils Programmētāju Skola</h2>
+    <div class="container rounded p-3 mb-3 text-white" :class="`${mode}-bg`">
+        <h2>{{ schoolName }} Skola</h2>
         <p class="m-0">studentu reģistrācija</p>
     </div>
 
     <div class="container">
 
         <div v-show="okMessage" class="alert alert-success text-center">
-            Students <strong>{{ fields.name.data.value }} {{ fields.surname.data.value }}</strong> tika veiksmīgi reģistrēts Daugavpils Programmētāju Skolas <strong>{{ fields.group.data.value }}</strong> grupā
+            Students <strong>{{ fields.name.data.value }} {{ fields.surname.data.value }}</strong> tika veiksmīgi reģistrēts {{ schoolName }} Skolas <strong>{{ fields.group.data.value }}</strong> grupā
             <p class="pt-3 mb-0 text-center">
                 <button class="btn btn-primary" @click.prevent="doRefresh">Reģistrēt nākamo studentu</button>
             </p>
@@ -21,7 +29,7 @@
 
             <div v-show="errMessage" class="alert alert-danger text-center alert-dismissible">
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                Neizdevās reģistrēt studentu <strong>{{ fields.name.data.value }} {{ fields.surname.data.value }}</strong> Daugavpils Programmētāju Skolas <strong>{{ fields.group.data.value }}</strong> grupā:<br>
+                Neizdevās reģistrēt studentu <strong>{{ fields.name.data.value }} {{ fields.surname.data.value }}</strong> {{ schoolName }} Skolas <strong>{{ fields.group.data.value }}</strong> grupā:<br>
                 {{ errMessage }}
             </div>
 
@@ -47,9 +55,9 @@
                     <label :for="`field-${id}`" class="form-label">{{ field.title }}</label>
                 </div>
 
-                <button v-if="!wait" class="btn btn-primary" @click.prevent="doRegister">Reģistrēties</button>
+                <button v-if="!wait" class="btn btn-primary" :class="`${mode}-bg`" @click.prevent="doRegister">Reģistrēties</button>
 
-                <button v-else class="btn btn-primary" disabled>
+                <button v-else class="btn btn-primary" :class="`${mode}-bg`" disabled>
                     <span class="spinner-border spinner-border-sm me-1"></span>
                     Reģistrējas...
                 </button>
@@ -63,8 +71,13 @@
 <script setup>
     import { ref } from 'vue';
 
+    const mode = ref(import.meta.env.VITE_TARGET);
+    const schoolName = mode.value == 'DPS' ? "Daugavpils Programmētāju" : "Daugavpils Inženieru";
+
     const fields = {
-        group:   { type: "select", data: ref("C2"), title: "DPS grupa", error: ref(""), values: ["A1", "A2", "B1", "B2", "C1", "C2"] },
+        group:   mode.value == 'DPS' ? 
+                 { type: "select", data: ref("C2"), title: "DPS grupa", error: ref(""), values: ["A1", "A2", "B1", "B2", "C1", "C2"] } : 
+                 { type: "select", data: ref("E1"), title: "DIS grupa", error: ref(""), values: ["E1"] },
         name:    { type: "text",   data: ref(""),   title: "Vārds", error: ref("")},
         surname: { type: "text",   data: ref(""),   title: "Uzvārds", error: ref("")},
         school:  { type: "text",   data: ref(""),   title: "Skola", error: ref("")},
@@ -77,12 +90,14 @@
     const errMessage = ref(false);
     const wait = ref(false);
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const group = urlParams.get('group');
-    let y = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].indexOf(group);
-    if (y >= 0) {
-        fields.group.data.value = group;
-        fields.year.data.value = 6 + y;
+    if (mode.value == 'DPS') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const group = urlParams.get('group');
+        let y = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].indexOf(group);
+        if (y >= 0) {
+            fields.group.data.value = group;
+            fields.year.data.value = 6 + y;
+        }
     }
 
     function isValidEmail(email) 
